@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobile/widget/radiogroup.dart';
 
 void main() {
@@ -41,7 +42,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String testing = '0';
-  String _selectedRadioOption = "100";
+  var txt = TextEditingController();
   final List<RadioModel> options = [
     RadioModel(label: "100", isSelected: true),
     RadioModel(label: "200")
@@ -52,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var loc = int.tryParse(testing) ?? 0;
       loc++;
       testing = '$loc';
+      _updateTextField(testing);
     });
   }
 
@@ -60,8 +62,41 @@ class _MyHomePageState extends State<MyHomePage> {
       var loc = int.tryParse(testing) ?? 0;
       loc--;
       testing = '$loc';
+      _updateTextField(testing);
     });
   }
+
+  StatefulWidget wid(List<RadioModel> mode) {
+    return RadioGroup(
+        items: mode,
+        onChanged: _updateRadioButton,
+        controlAffinity: ListTileControlAffinity.trailing);
+  }
+
+  void _updateTextField(String newText) {
+    setState(() {
+      txt.text = newText;
+      testing = txt.text;
+      txt.selection = TextSelection.collapsed(offset: testing.length);
+      for(var i in options) {
+        i.isSelected = false;
+        if(i.label == newText)
+        {
+          i.isSelected = true;
+        }
+      }
+      wid(options);
+    });
+  }
+
+  void _updateRadioButton(RadioModel newText) {
+    setState(() {
+      txt.text = newText.label;
+      testing = txt.text;
+      txt.selection = TextSelection.collapsed(offset: testing.length);
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -78,17 +113,17 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(
                 'Current number: $testing',
               ),
-              TextField(
+              TextFormField(
+                controller: txt,
                 keyboardType: TextInputType.number,
-                onChanged: (text) {
-                  setState(() {
-                    testing = text;
-                  });
-                },
-                decoration: new InputDecoration(
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                maxLength: 10,
+                onChanged: _updateTextField,
+                decoration: const InputDecoration(
+                  labelText: 'Enter number here',
+                  labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey, width: 5.0),
@@ -96,20 +131,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   hintText: 'Number',
                 ),
               ),
-              RadioGroup(
-                  items: options,
-                  onChanged: (RadioModel radioModel) {
-                    _selectedRadioOption = radioModel.label;
-                    setState(() {
-                      testing = radioModel.label;
-                    });
-                  },
-                  controlAffinity: ListTileControlAffinity.trailing)
+              wid(options)
             ],
           ),
         ),
         floatingActionButton:
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
           FloatingActionButton(
             child: const Icon(Icons.exposure_minus_1),
             onPressed: _decrementCounter,
@@ -121,6 +148,6 @@ class _MyHomePageState extends State<MyHomePage> {
             heroTag: null,
           )
         ]) // This trailing comma makes auto-formatting nicer for build methods.
-        );
+    );
   }
 }
